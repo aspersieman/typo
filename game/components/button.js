@@ -1,4 +1,4 @@
-class Button {
+export class Button {
   constructor(text, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
@@ -14,7 +14,7 @@ class Button {
     this.fillColor = fillColor;
     this.textColor = textColor;
   }
-  draw = function (c) {
+  draw(c) {
     c.fillStyle = this.fillColor;
     c.strokeStyle = this.fillColor;
     c.beginPath();
@@ -31,21 +31,21 @@ class Button {
       this.y + this.height / 2,
       this.width,
     );
-  };
-  setPosition = function (x, y) {
+  }
+  setPosition(x, y) {
     this.x = x;
     this.y = y;
-  };
-  setSize = function (width, height) {
+  }
+  setSize(width, height) {
     this.width = width;
     this.height = height;
-  };
-  inBounds = function (mouseX, mouseY) {
+  }
+  inBounds(mouseX, mouseY) {
     return !(
       mouseX < this.x ||
       mouseX > this.x + this.width ||
       mouseY < this.y ||
       mouseY > this.y + this.height
     );
-  };
+  }
 }

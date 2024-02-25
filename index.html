@@ -1,17 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <title>Typo - Word Game</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="style.css" rel="stylesheet" />
-  </head>
 
-  <body>
-    <canvas id="canvas" width="600" height="600"></canvas>
-    <script src="game.js"></script>
-    <script src="button.js"></script>
-    <script src="word.js"></script>
-    <script src="script.js"></script>
-  </body>
+<head>
+  <title>Typo - Word Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="style.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="imgs/keyboard.png" />
+</head>
+
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <script type="importmap">
+      {
+        "imports": {
+          "game": "./game/game.js",
+          "game.button": "./game/components/button.js",
+          "game.particle": "./game/components/particle.js",
+          "game.word": "./game/components/word.js",
+          "utils.log": "./game/utils/log.js"
+        }
+      }
+    </script>
+  <script type="module" src="script.js"></script>
+</body>
+
 </html>
