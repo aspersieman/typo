@@ -1,42 +1,53 @@
-export class WordComponent {
-  constructor(text, fillColor, textColor) {
+export class ScoreComponent {
+  constructor(fillColor, textColor) {
     if (fillColor === void 0) {
-      fillColor = "#ffffff";
+      fillColor = "rgba(0, 0, 0, 1)";
     }
     if (textColor === void 0) {
-      textColor = "#000000";
+      textColor = "#33CCFF";
     }
     this.x = 10;
-    this.y = 0;
-    this.width = 0;
-    this.height = 0;
-    this.text = text;
+    this.y = 10;
+    this.width = 70;
+    this.height = 20;
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = "VISIBLE";
+    this.score = 0;
   }
   draw(c) {
-    if (this.state == "VISIBLE") {
+    if (this.state === "VISIBLE") {
+      c.lineWidth = 3;
+      c.strokeStyle = this.textColor;
+      c.stroke();
+      c.beginPath();
       c.fillStyle = this.fillColor;
-      c.fillRect(this.x, this.y, this.width, this.height);
-      c.fillStyle = this.textColor;
+      c.roundRect(this.x, this.y, this.width, this.height, 2);
+      c.fill();
+      c.stroke();
       c.textAlign = "center";
       c.textBaseline = "middle";
-      c.font = "25px arial";
+      c.font = "13px arial";
+      c.fillStyle = this.textColor;
       c.fillText(
-        this.text,
+        `Score: ${this.score}`,
         this.x + this.width / 2,
         this.y + this.height / 2,
         this.width,
       );
     }
   }
-  move(maxHeight) {
-    if (this.y + this.height > maxHeight) {
-      return false;
+  setScore(score) {
+    if (typeof score !== "number") {
+      score = 0;
     }
-    this.setPosition(this.x, this.y + 1);
-    return true;
+    if (score < 0) {
+      score = 0;
+    }
+    this.score = score;
+  }
+  increment() {
+    this.setScore(this.score + 1);
   }
   setPosition(x, y) {
     this.x = x;

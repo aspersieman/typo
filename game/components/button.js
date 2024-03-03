@@ -1,4 +1,4 @@
-export class Button {
+export class ButtonComponent {
   constructor(text, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
@@ -13,24 +13,27 @@ export class Button {
     this.text = text;
     this.fillColor = fillColor;
     this.textColor = textColor;
+    this.state = "VISIBLE";
   }
   draw(c) {
-    c.fillStyle = this.fillColor;
-    c.strokeStyle = this.fillColor;
-    c.beginPath();
-    c.roundRect(this.x, this.y, this.width, this.height, 5);
-    c.stroke();
-    c.fill();
-    c.fillStyle = this.textColor;
-    c.textAlign = "center";
-    c.textBaseline = "middle";
-    c.font = "25px arial";
-    c.fillText(
-      this.text,
-      this.x + this.width / 2,
-      this.y + this.height / 2,
-      this.width,
-    );
+    if (this.state === "VISIBLE") {
+      c.fillStyle = this.fillColor;
+      c.strokeStyle = this.fillColor;
+      c.beginPath();
+      c.roundRect(this.x, this.y, this.width, this.height, 5);
+      c.stroke();
+      c.fill();
+      c.fillStyle = this.textColor;
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.font = "25px arial";
+      c.fillText(
+        this.text,
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        this.width,
+      );
+    }
   }
   setPosition(x, y) {
     this.x = x;
@@ -47,5 +50,11 @@ export class Button {
       mouseY < this.y ||
       mouseY > this.y + this.height
     );
+  }
+  hide() {
+    this.state = "HIDDEN";
+  }
+  show() {
+    this.state = "VISIBLE";
   }
 }
