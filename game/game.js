@@ -5,6 +5,7 @@ import { TriangleComponent } from "game.triangle";
 import { ScoreComponent } from "game.score";
 import { GameOverScreen } from "game.gameover";
 import { log } from "utils.log";
+import { Point } from "utils.geometry";
 // TODO: Implement scenes, include base class with common functions
 // TODO: Implement levels
 // TODO: Implement child components
@@ -24,13 +25,6 @@ export const GameScenes = {
   PAUSED: "PAUSED",
   GAME_OVER: "GAME_OVER",
 };
-
-export class Point {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-}
 
 export class Game {
   constructor(appEnv) {
@@ -79,11 +73,12 @@ export class Game {
       const word = new WordComponent(this.canvas, w, "#FF5733", "#001122");
       word.setPosition(canvas.width / 2 - 100, 0);
       word.setSize(200, 75);
+      word.setDestination(canvas.width / 2 - 100, this.wordMaxHeight);
       this.words.push(word);
     });
   }
 
-  getDictionary = async (count = 10) => {
+  initWords = async (count = 10) => {
     log("Fetching dictionary...");
     if (this.appEnv === "production") {
       const response = await fetch(
@@ -114,27 +109,6 @@ export class Game {
     }
     return [];
   };
-
-  init() {
-    log();
-    this.getDictionary();
-    this.initButtons();
-    this.initFloor();
-    this.initTextInput();
-    this.listeners();
-  }
-
-  addButton(id, button) {
-    if (!id) {
-      throw new Error("Button id is required");
-    }
-    if (!button) {
-      throw new Error("Button is required");
-    }
-    if (!Object.keys(this.buttons).includes(id)) {
-      this.buttons[id] = button;
-    }
-  }
 
   initButtons() {
     const btnStartGame = new ButtonComponent(
@@ -171,6 +145,25 @@ export class Game {
     this.addButton("BTN_CONTINUE_GAME", btnContinueGame);
   }
 
+  initFloor() {
+    let x1 = 50;
+    let x2 = 0;
+    let x3 = 100;
+    for (let i = 0; i < canvas.width; i += 100) {
+      this.floor.push(
+        new TriangleComponent(
+          this.canvas,
+          new Point(x1, 575),
+          new Point(x2, 600),
+          new Point(x3, 600),
+        ),
+      );
+      x1 += 100;
+      x2 += 100;
+      x3 += 100;
+    }
+  }
+
   initParticles(startX, startY) {
     for (let i = 1; i <= this.explosionParticleCount; i++) {
       let dx = (Math.random() - 0.5) * (Math.random() * 6);
@@ -187,19 +180,6 @@ export class Game {
       this.explosionParticles.push(particle);
     }
   }
-
-  handleTextInput = (e) => {
-    if (e.key === "Enter" && this.state === GameState.STARTED) {
-      const t = e.target.value.trim().toLowerCase();
-      if (t !== "") {
-        if (t === this.words[this.words.length - 1].text) {
-          this.score.increment();
-        }
-        e.target.value = "";
-        e.target.focus();
-      }
-    }
-  };
 
   initTextInput() {
     if (!this.textInput) {
@@ -228,27 +208,48 @@ export class Game {
     this.textInput.placeholder = "Type the falling text here...";
   }
 
-  initFloor() {
-    let x1 = 50;
-    let x2 = 0;
-    let x3 = 100;
-    for (let i = 0; i < canvas.width; i += 100) {
-      this.floor.push(
-        new TriangleComponent(
-          this.canvas,
-          new Point(x1, 575),
-          new Point(x2, 600),
-          new Point(x3, 600),
-        ),
-      );
-      x1 += 100;
-      x2 += 100;
-      x3 += 100;
+  init() {
+    log();
+    this.initWords();
+    this.initButtons();
+    this.initFloor();
+    this.initTextInput();
+    this.listeners();
+  }
+
+  addButton(id, button) {
+    if (!id) {
+      throw new Error("Button id is required");
+    }
+    if (!button) {
+      throw new Error("Button is required");
+    }
+    if (!Object.keys(this.buttons).includes(id)) {
+      this.buttons[id] = button;
     }
   }
 
+  handleTextInput = (e) => {
+    if (e.key === "Enter" && this.state === GameState.STARTED) {
+      const t = e.target.value.trim().toLowerCase();
+      if (t !== "") {
+        if (t === this.words[this.words.length - 1].text) {
+          this.words[this.words.length - 1].setCorrect();
+          this.words[this.words.length - 1].setDestination(
+            this.score.x + this.score.width / 2,
+            this.score.y + this.score.height / 2,
+          );
+          this.score.increment();
+        }
+        e.target.value = "";
+        e.target.focus();
+      }
+    }
+  };
+
   listeners() {
     window.onresize = () => {
+      this.wordMaxHeight = this.canvas.height - 25;
       this.initTextInput();
     };
     canvas.addEventListener("click", (event) => {
@@ -280,7 +281,7 @@ export class Game {
       if (particle.alpha <= 0) {
         this.explosionParticles.splice(i, 1);
       } else {
-        particle.move(this.ctx);
+        particle.move();
       }
     });
     if (this.explosionParticles.length === 0) {
@@ -303,7 +304,7 @@ export class Game {
   drawWord() {
     let wordCount = this.words.length;
     if (wordCount > 0) {
-      if (!this.words[wordCount - 1].move(this.wordMaxHeight)) {
+      if (!this.words[wordCount - 1].move()) {
         const px =
           this.words[wordCount - 1].x + this.words[wordCount - 1].width / 2;
         this.initParticles(px, this.words[wordCount - 1].y);
@@ -316,7 +317,7 @@ export class Game {
     }
     // if (wordCount < this.minWordCount && this.loadingWordCount === false) {
     //   this.loadingWordCount = true;
-    //   this.getDictionary();
+    //   this.initWords();
     // }
 
     this.explosion();

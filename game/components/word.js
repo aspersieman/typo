@@ -1,3 +1,11 @@
+import { Point } from "utils.geometry";
+
+export const WordState = {
+  VISIBLE: "VISIBLE",
+  HIDDEN: "HIDDEN",
+  CORRECT: "CORRECT",
+};
+
 export class WordComponent {
   constructor(canvas, text, fillColor, textColor) {
     if (fillColor === void 0) {
@@ -8,17 +16,23 @@ export class WordComponent {
     }
     this.x = 10;
     this.y = 0;
+    this.dx = 0;
+    this.dy = 0;
     this.width = 0;
+    this.minWidth = 0;
     this.height = 0;
+    this.minHeight = 0;
     this.text = text;
     this.fillColor = fillColor;
     this.textColor = textColor;
-    this.state = "VISIBLE";
+    this.state = WordState.VISIBLE;
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
+    this.target = null;
+    this.speed = 200;
   }
   draw() {
-    if (this.state == "VISIBLE") {
+    if (this.state !== WordState.HIDDEN) {
       this.ctx.save();
       this.ctx.fillStyle = this.fillColor;
       this.ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -33,22 +47,45 @@ export class WordComponent {
         this.width,
       );
       this.ctx.restore();
+      if (this.state === WordState.CORRECT) {
+        const dw = ((this.width - this.minWidth) / this.speed) * -1;
+        const dh = ((this.height - this.minHeight) / this.speed) * -1;
+        this.width += dw;
+        this.height += dh;
+      }
     }
   }
-  move(maxHeight) {
-    if (this.y + this.height > maxHeight) {
+  move() {
+    console.log("Word dx, dy: ", this.dx, this.dy);
+    const shouldMove =
+      Math.abs(this.x - this.target.x) > 1 ||
+      Math.abs(this.y - this.target.y) > 1;
+    if (!shouldMove) {
+      this.dx = 0;
+      this.dy = 0;
       return false;
     }
-    this.setPosition(this.x, this.y + 1);
+    this.setPosition(this.x + this.dx, this.y + this.dy);
     return true;
   }
   setPosition(x, y) {
     this.x = x;
     this.y = y;
   }
+  setDestination(x, y) {
+    this.target = new Point(x, y);
+    this.dx = ((this.x - this.target.x) / this.speed) * -1;
+    this.dy = ((this.y - this.target.y) / this.speed) * -1;
+  }
   setSize(width, height) {
     this.width = width;
+    this.minWidth = width * 0.1;
     this.height = height;
+    this.minHeight = height * 0.1;
+  }
+  setCorrect() {
+    this.state = WordState.CORRECT;
+    this.speed = 10;
   }
   inBounds(mouseX, mouseY) {
     return !(
@@ -59,9 +96,9 @@ export class WordComponent {
     );
   }
   hide() {
-    this.state = "HIDDEN";
+    this.state = WordState.HIDDEN;
   }
   show() {
-    this.state = "VISIBLE";
+    this.state = WordState.VISIBLE;
   }
 }
