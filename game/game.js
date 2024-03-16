@@ -38,7 +38,6 @@ export class Game {
     this.canvas = document.getElementById("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.state = GameState.NOT_STARTED;
-    this.score = 0;
     this.stage = 1;
     this.level = 1;
     this.minWordCount = 5;
@@ -49,12 +48,12 @@ export class Game {
     this.explosionParticles = [];
     this.exploding = false;
     this.floor = [];
+    this.textInput = null;
     this.wordMaxHeight = this.canvas.height - 25;
-    this.score = new ScoreComponent();
+    this.score = new ScoreComponent(this.canvas);
     this.gameOverScreen = new GameOverScreen(
       this,
       this.canvas,
-      this.ctx,
       "Game Over",
       "#001122",
       "#FF5733",
@@ -77,7 +76,7 @@ export class Game {
 
   makeWords(list) {
     list.forEach((w) => {
-      const word = new WordComponent(w, "#FF5733", "#001122");
+      const word = new WordComponent(this.canvas, w, "#FF5733", "#001122");
       word.setPosition(canvas.width / 2 - 100, 0);
       word.setSize(200, 75);
       this.words.push(word);
@@ -139,6 +138,7 @@ export class Game {
 
   initButtons() {
     const btnStartGame = new ButtonComponent(
+      this.canvas,
       "Start Game",
       "#eeaa00",
       "#001122",
@@ -154,6 +154,7 @@ export class Game {
     this.addButton("BTN_START_GAME", btnStartGame);
 
     const btnContinueGame = new ButtonComponent(
+      this.canvas,
       "Continue",
       "#FFFFFF",
       "#001122",
@@ -175,7 +176,14 @@ export class Game {
       let dx = (Math.random() - 0.5) * (Math.random() * 6);
       let dy = (Math.random() - 0.5) * (Math.random() * 6);
       let radius = Math.random() * 10;
-      let particle = new ParticleComponent(startX, startY, radius, dx, dy);
+      let particle = new ParticleComponent(
+        this.canvas,
+        startX,
+        startY,
+        radius,
+        dx,
+        dy,
+      );
       this.explosionParticles.push(particle);
     }
   }
@@ -194,27 +202,30 @@ export class Game {
   };
 
   initTextInput() {
-    const input = document.createElement("input");
+    if (!this.textInput) {
+      const input = document.createElement("input");
+      input.id = "textInput";
+      input.style.display = "none";
+      input.type = "text";
+      input.style.border = "1px solid #000";
+      input.style.borderRadius = "5px";
+      input.style.fontSize = "large";
+      input.style.padding = "1rem";
+      input.style.position = "fixed";
+
+      input.onkeydown = this.handleTextInput;
+
+      document.body.appendChild(input);
+
+      input.focus();
+      this.textInput = input;
+    }
     const rect = this.canvas.getBoundingClientRect();
-    input.style.display = "none";
-    input.type = "text";
-    input.style.border = "1px solid #000";
-    input.style.borderRadius = "5px";
-    input.style.fontSize = "large";
-    input.style.padding = "1rem";
-    input.style.position = "fixed";
-    input.style.left = rect.x + "px";
-    input.style.top = rect.y + rect.height + 10 + "px";
-    input.style.width = rect.width + "px";
-    input.style.maxWidth = rect.width - 35 + "px";
-    input.placeholder = "Type the falling text here...";
-
-    input.onkeydown = this.handleTextInput;
-
-    document.body.appendChild(input);
-
-    input.focus();
-    this.textInput = input;
+    this.textInput.style.left = rect.x + "px";
+    this.textInput.style.top = rect.y + rect.height + 10 + "px";
+    this.textInput.style.width = rect.width + "px";
+    this.textInput.style.maxWidth = rect.width - 35 + "px";
+    this.textInput.placeholder = "Type the falling text here...";
   }
 
   initFloor() {
@@ -224,6 +235,7 @@ export class Game {
     for (let i = 0; i < canvas.width; i += 100) {
       this.floor.push(
         new TriangleComponent(
+          this.canvas,
           new Point(x1, 575),
           new Point(x2, 600),
           new Point(x3, 600),
@@ -236,6 +248,9 @@ export class Game {
   }
 
   listeners() {
+    window.onresize = () => {
+      this.initTextInput();
+    };
     canvas.addEventListener("click", (event) => {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
@@ -275,13 +290,13 @@ export class Game {
 
   drawFloor() {
     this.floor.forEach((triangle) => {
-      triangle.draw(this.ctx);
+      triangle.draw();
     });
   }
 
   drawButtons() {
     Object.keys(this.buttons).forEach((b) => {
-      return this.buttons[b].draw(this.ctx);
+      return this.buttons[b].draw();
     });
   }
 
@@ -296,7 +311,7 @@ export class Game {
         wordCount = this.words.length;
       }
       if (wordCount > 0) {
-        this.words[wordCount - 1].draw(this.ctx);
+        this.words[wordCount - 1].draw();
       }
     }
     // if (wordCount < this.minWordCount && this.loadingWordCount === false) {
@@ -315,7 +330,7 @@ export class Game {
     this.drawButtons();
     if (this.state === GameState.STARTED) {
       this.gameOverScreen.hide();
-      this.score.draw(this.ctx);
+      this.score.draw();
       this.drawFloor();
       this.drawWord();
     }

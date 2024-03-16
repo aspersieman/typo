@@ -1,16 +1,17 @@
 import { ButtonComponent } from "game.button";
+import { ScoreComponent } from "game.score";
 import { GameState } from "game";
 
 export class GameOverScreen {
-  constructor(game, canvas, ctx, title, fillColor, textColor) {
+  constructor(game, canvas, title, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
     }
     if (textColor === void 0) {
       textColor = "#000000";
     }
-    this.ctx = ctx;
     this.canvas = canvas;
+    this.ctx = this.canvas.getContext("2d");
     this.game = game;
     this.x = 0.1 * this.canvas.width;
     this.y = 0.1 * this.canvas.height;
@@ -22,9 +23,11 @@ export class GameOverScreen {
     this.state = "HIDDEN";
     this.buttons = {};
     this.initButtons();
+    this.score = new ScoreComponent(this.canvas);
   }
   draw() {
     if (this.state === "VISIBLE") {
+      this.ctx.save();
       this.ctx.fillStyle = this.fillColor;
       this.ctx.strokeStyle = "#555555";
       this.ctx.beginPath();
@@ -40,10 +43,17 @@ export class GameOverScreen {
       this.ctx.fillText(
         this.title,
         this.x + this.width / 2,
-        this.y + this.height / 2,
+        this.y + this.height * 0.25,
         this.width,
       );
       this.drawButtons();
+      this.score.setScore(this.game.score.score);
+      this.score.setPosition(
+        this.canvas.width / 2 - this.score.width / 2,
+        this.canvas.height / 2 - this.score.height / 2,
+      );
+      this.score.draw();
+      this.ctx.restore();
     }
   }
   addButton(id, button) {
@@ -58,7 +68,12 @@ export class GameOverScreen {
     }
   }
   initButtons() {
-    const btnRestartGame = new ButtonComponent("Restart", "#", "#001122");
+    const btnRestartGame = new ButtonComponent(
+      this.canvas,
+      "Restart",
+      "#FF5733",
+      "#001122",
+    );
     btnRestartGame.setPosition(
       this.canvas.width / 2 - 100,
       this.canvas.height * 0.75,
@@ -77,7 +92,7 @@ export class GameOverScreen {
   }
   drawButtons() {
     Object.keys(this.buttons).forEach((b) => {
-      return this.buttons[b].draw(this.ctx);
+      return this.buttons[b].draw();
     });
   }
   setPosition(x, y) {

@@ -1,5 +1,5 @@
 export class ScoreComponent {
-  constructor(fillColor, textColor) {
+  constructor(canvas, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "rgba(0, 0, 0, 1)";
     }
@@ -14,27 +14,32 @@ export class ScoreComponent {
     this.textColor = textColor;
     this.state = "VISIBLE";
     this.score = 0;
+    this.canvas = canvas;
+    this.ctx = this.canvas.getContext("2d");
   }
-  draw(c) {
+  draw() {
     if (this.state === "VISIBLE") {
-      c.lineWidth = 3;
-      c.strokeStyle = this.textColor;
-      c.stroke();
-      c.beginPath();
-      c.fillStyle = this.fillColor;
-      c.roundRect(this.x, this.y, this.width, this.height, 2);
-      c.fill();
-      c.stroke();
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.font = "13px arial";
-      c.fillStyle = this.textColor;
-      c.fillText(
+      this.ctx.restore();
+      this.ctx.save();
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeStyle = this.textColor;
+      this.ctx.stroke();
+      this.ctx.beginPath();
+      this.ctx.fillStyle = this.fillColor;
+      this.ctx.roundRect(this.x, this.y, this.width, this.height, 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.font = "13px arial";
+      this.ctx.fillStyle = this.textColor;
+      this.ctx.fillText(
         `Score: ${this.score}`,
         this.x + this.width / 2,
         this.y + this.height / 2,
         this.width,
       );
+      this.ctx.restore();
     }
   }
   setScore(score) {

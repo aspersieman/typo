@@ -1,5 +1,5 @@
 export class WordComponent {
-  constructor(text, fillColor, textColor) {
+  constructor(canvas, text, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
     }
@@ -14,21 +14,25 @@ export class WordComponent {
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = "VISIBLE";
+    this.canvas = canvas;
+    this.ctx = this.canvas.getContext("2d");
   }
-  draw(c) {
+  draw() {
     if (this.state == "VISIBLE") {
-      c.fillStyle = this.fillColor;
-      c.fillRect(this.x, this.y, this.width, this.height);
-      c.fillStyle = this.textColor;
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.font = "25px arial";
-      c.fillText(
+      this.ctx.save();
+      this.ctx.fillStyle = this.fillColor;
+      this.ctx.fillRect(this.x, this.y, this.width, this.height);
+      this.ctx.fillStyle = this.textColor;
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.font = "25px arial";
+      this.ctx.fillText(
         this.text,
         this.x + this.width / 2,
         this.y + this.height / 2,
         this.width,
       );
+      this.ctx.restore();
     }
   }
   move(maxHeight) {

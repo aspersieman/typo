@@ -5,26 +5,28 @@ export class TriangleComponent {
    *          *     *
    *      pb ********* pc
    */
-  constructor(pa, pb, pc) {
+  constructor(canvas, pa, pb, pc) {
     this.state = "VISIBLE";
     this.pa = pa;
     this.pb = pb;
     this.pc = pc;
+    this.canvas = canvas;
+    this.ctx = this.canvas.getContext("2d");
   }
-  draw(c) {
+  draw() {
     if (this.state === "VISIBLE") {
-      c.beginPath();
-      c.moveTo(this.pa.x, this.pa.y);
-      c.lineTo(this.pb.x, this.pb.y);
-      c.lineTo(this.pc.x, this.pc.y);
-      c.closePath();
-
-      c.lineWidth = 10;
-      c.strokeStyle = "#666666";
-      c.stroke();
-
-      c.fillStyle = "#FFCC00";
-      c.fill();
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.pa.x, this.pa.y);
+      this.ctx.lineTo(this.pb.x, this.pb.y);
+      this.ctx.lineTo(this.pc.x, this.pc.y);
+      this.ctx.closePath();
+      this.ctx.lineWidth = 10;
+      this.ctx.strokeStyle = "#666666";
+      this.ctx.stroke();
+      this.ctx.fillStyle = "#FFCC00";
+      this.ctx.fill();
+      this.ctx.restore();
     }
   }
   inBounds(mouseX, mouseY) {

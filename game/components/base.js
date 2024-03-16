@@ -1,11 +1,13 @@
 // TODO: Flesh this out.
 export class BaseComponent {
-  constructor(fillColor) {
+  constructor(canvas, fillColor) {
     this.x = 0;
     this.y = 0;
     this.width = 0;
     this.height = 0;
     this.fillColor = fillColor;
+    this.canvas = canvas;
+    this.ctx = this.canvas.getContext("2d");
   }
   setPosition(x, y) {
     this.x = x;
