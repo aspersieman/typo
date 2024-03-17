@@ -21,7 +21,7 @@ export class LifeComponent {
     if (this.state === "VISIBLE") {
       this.ctx.save();
       this.ctx.lineWidth = 3;
-      this.ctx.strokeStyle = this.textColor;
+      this.ctx.strokeStyle = this.fillColor;
       this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.fillStyle = this.fillColor;
@@ -43,17 +43,20 @@ export class LifeComponent {
       this.ctx.restore();
     }
   }
-  setScore(score) {
-    if (typeof score !== "number") {
-      score = 0;
+  setLives(lives) {
+    if (typeof lives !== "number") {
+      lives = 0;
     }
-    if (score < 0) {
-      score = 0;
+    if (lives < 0) {
+      lives = 0;
     }
-    this.score = score;
+    this.lives = lives;
   }
   increment() {
-    this.setScore(this.score + 1);
+    this.setLives(this.lives + 1);
+  }
+  decrement() {
+    this.setLives(this.lives - 1);
   }
   setPosition(x, y) {
     this.x = x;

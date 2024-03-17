@@ -20,7 +20,7 @@ export class LevelComponent {
   draw() {
     if (this.state === "VISIBLE") {
       this.ctx.save();
-      this.ctx.lineWidth = 3;
+      this.ctx.lineWidth = 0;
       this.ctx.strokeStyle = this.textColor;
       this.ctx.stroke();
       this.ctx.beginPath();

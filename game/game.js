@@ -85,6 +85,7 @@ export class Game {
   restartGame() {
     this.score.setScore(0);
     this.level.setLevel(1);
+    this.life.setLives(3);
     this.initWords();
     this.setState(GameState.COUNTDOWN);
   }
@@ -362,11 +363,12 @@ export class Game {
 
   drawWord(time = 0) {
     let wordCount = this.words.length;
-    if (wordCount > 0) {
+    if (wordCount > 0 && this.life.lives > 0) {
       if (!this.words[wordCount - 1].move()) {
         const px =
           this.words[wordCount - 1].x + this.words[wordCount - 1].width / 2;
         if (this.words[wordCount - 1].state === WordState.INCORRECT) {
+          this.life.decrement();
           this.initParticles(px, this.words[wordCount - 1].y);
         }
         if (this.words[wordCount - 1].state === WordState.CORRECT) {
@@ -394,8 +396,7 @@ export class Game {
     this.drawExplosion();
     this.drawConfetti(time);
     if (
-      wordCount <= 0 &&
-      this.loadingWordCount === false &&
+      (this.life.lives <= 0 || (wordCount <= 0 && !this.loadingWordCount)) &&
       !this.exploding &&
       !this.confettiing
     ) {
