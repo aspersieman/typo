@@ -1,16 +1,19 @@
 import { ButtonComponent } from "game.button";
-import { WordComponent } from "game.word";
+import { WordComponent, WordState } from "game.word";
 import { ParticleComponent } from "game.particle";
+import { ConfettiComponent } from "game.confetti";
 import { TriangleComponent } from "game.triangle";
 import { ScoreComponent } from "game.score";
+import { LifeComponent } from "game.life";
+import { LevelComponent } from "game.level";
 import { GameOverScreen } from "game.gameover";
 import { CountdownScreen } from "game.countdown";
 import { log } from "utils.log";
 import { Point } from "utils.geometry";
-// TODO: Implement scenes, include base class with common functions
-// TODO: Implement levels
-// TODO: Implement child components
+
 // TODO: Implement pallette for various colours
+// TODO: Make work in full window mode
+// TODO: Make work in full screen mode
 
 export const GameState = {
   NOT_STARTED: "NOT_STARTED",
@@ -21,32 +24,30 @@ export const GameState = {
   GAME_OVER: "GAME_OVER",
 };
 
-// TODO: Use these
-export const GameScenes = {
-  NOT_STARTED: "NOT_STARTED",
-  PAUSED: "PAUSED",
-  GAME_OVER: "GAME_OVER",
-};
-
 export class Game {
   constructor(appEnv) {
     this.appEnv = appEnv;
     this.canvas = document.getElementById("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.state = GameState.NOT_STARTED;
-    this.stage = 1;
-    this.level = 1;
     this.minWordCount = 5;
     this.loadingWordCount = false;
     this.words = [];
+    this.wordsCompleted = 0;
     this.buttons = {};
     this.explosionParticleCount = 50;
     this.explosionParticles = [];
+    this.confettiParticleCount = 50;
+    this.confettiParticles = [];
+    this.lastConfettiTime = 0;
     this.exploding = false;
+    this.confettiing = false;
     this.floor = [];
     this.textInput = null;
     this.wordMaxHeight = this.canvas.height - 25;
     this.score = new ScoreComponent(this.canvas);
+    this.level = new LevelComponent(this.canvas);
+    this.life = new LifeComponent(this.canvas);
     this.gameOverScreen = new GameOverScreen(
       this,
       this.canvas,
@@ -77,12 +78,24 @@ export class Game {
     }
   }
 
+  gameOver() {
+    this.setState(GameState.GAME_OVER);
+  }
+
+  restartGame() {
+    this.score.setScore(0);
+    this.level.setLevel(1);
+    this.initWords();
+    this.setState(GameState.COUNTDOWN);
+  }
+
   makeWords(list) {
     list.forEach((w) => {
       const word = new WordComponent(this.canvas, w, "#FF5733", "#001122");
       word.setPosition(canvas.width / 2 - 100, 0);
       word.setSize(200, 75);
       word.setDestination(canvas.width / 2 - 100, this.wordMaxHeight);
+      word.setLevel(this.level.level);
       this.words.push(word);
     });
   }
@@ -104,15 +117,15 @@ export class Game {
     } else {
       let list = [
         "aching",
-        // "capable",
-        // "handclasp",
-        // "eloquent",
-        // "submarine",
-        // "enamel",
-        // "bargraph",
-        // "unicycle",
-        // "unbounded",
-        // "shaded",
+        "capable",
+        "handclasp",
+        "eloquent",
+        "submarine",
+        "enamel",
+        "bargraph",
+        "unicycle",
+        "unbounded",
+        "shaded",
       ];
       this.makeWords(list);
     }
@@ -195,6 +208,18 @@ export class Game {
         dy,
       );
       this.explosionParticles.push(particle);
+    }
+  }
+
+  initConfetti(startY) {
+    const min = this.score.x;
+    const max = this.score.x + this.score.width;
+    for (let i = 1; i <= this.confettiParticleCount; i++) {
+      let dx = (Math.random() - 0.5) * (Math.random() * 6);
+      let dy = (Math.random() - 0.5) * (Math.random() * 6);
+      const x = Math.floor(Math.random() * (max - min + 1)) + min;
+      let confetti = new ConfettiComponent(this.canvas, x, startY, dx, dy);
+      this.confettiParticles.push(confetti);
     }
   }
 
@@ -293,7 +318,7 @@ export class Game {
     });
   }
 
-  explosion() {
+  drawExplosion() {
     this.exploding = true;
     this.explosionParticles.forEach((particle, i) => {
       if (particle.alpha <= 0) {
@@ -319,15 +344,41 @@ export class Game {
     });
   }
 
-  drawWord() {
+  drawConfetti(time = 0) {
+    this.confettiing = true;
+    const deltaTime = time - this.lastConfettiTime;
+    this.lastConfettiTime = time;
+    this.confettiParticles.forEach((confetto) => {
+      confetto.move(deltaTime);
+      confetto.draw();
+    });
+    this.confettiParticles = this.confettiParticles.filter(
+      (confetto) => confetto.size > 0,
+    );
+    if (this.confettiParticles.length === 0) {
+      this.confettiing = false;
+    }
+  }
+
+  drawWord(time = 0) {
     let wordCount = this.words.length;
     if (wordCount > 0) {
       if (!this.words[wordCount - 1].move()) {
         const px =
           this.words[wordCount - 1].x + this.words[wordCount - 1].width / 2;
-        this.initParticles(px, this.words[wordCount - 1].y);
-        console.log("popping");
+        if (this.words[wordCount - 1].state === WordState.INCORRECT) {
+          this.initParticles(px, this.words[wordCount - 1].y);
+        }
+        if (this.words[wordCount - 1].state === WordState.CORRECT) {
+          this.initConfetti(this.words[wordCount - 1].y);
+        }
         this.words.pop();
+        this.textInput.value = "";
+        this.wordsCompleted++;
+
+        if (this.wordsCompleted % 10 === 0) {
+          this.level.increment();
+        }
         wordCount = this.words.length;
       }
       wordCount = this.words.length;
@@ -335,19 +386,24 @@ export class Game {
         this.words[wordCount - 1].draw();
       }
     }
-    // if (wordCount < this.minWordCount && this.loadingWordCount === false) {
-    //   this.loadingWordCount = true;
-    //   this.initWords();
-    // }
+    if (wordCount < this.minWordCount && this.loadingWordCount === false) {
+      this.loadingWordCount = true;
+      this.initWords();
+    }
 
-    this.explosion();
-    if (wordCount <= 0 && this.loadingWordCount === false && !this.exploding) {
-      this.setState(GameState.GAME_OVER);
+    this.drawExplosion();
+    this.drawConfetti(time);
+    if (
+      wordCount <= 0 &&
+      this.loadingWordCount === false &&
+      !this.exploding &&
+      !this.confettiing
+    ) {
+      this.gameOver();
     }
   }
 
-  run() {
-    console.log(this.state);
+  run(time = 0) {
     this.reset();
     this.drawButtons();
     if (this.state === GameState.COUNTDOWN) {
@@ -358,8 +414,10 @@ export class Game {
       this.countdownScreen.hide();
       this.gameOverScreen.hide();
       this.score.draw();
+      this.level.draw();
+      this.life.draw();
       this.drawFloor();
-      this.drawWord();
+      this.drawWord(time);
     }
     if (this.state === GameState.SET_PAUSE) {
       this.setState(GameState.PAUSED);
@@ -370,6 +428,7 @@ export class Game {
       this.gameOverScreen.show();
       this.gameOverScreen.draw();
     }
-    window.requestAnimationFrame(() => this.run());
+    // ensure time gets passed to run
+    window.requestAnimationFrame(this.run.bind(this));
   }
 }

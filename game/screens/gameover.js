@@ -83,8 +83,7 @@ export class GameOverScreen {
     btnRestartGame.onClick = () => {
       if (btnRestartGame.state === "VISIBLE") {
         btnRestartGame.hide();
-        this.game.initWords();
-        this.game.setState(GameState.COUNTDOWN);
+        this.game.restartGame();
         this.hide();
         return console.log("Restarted!");
       }

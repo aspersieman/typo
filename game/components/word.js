@@ -4,14 +4,15 @@ export const WordState = {
   VISIBLE: "VISIBLE",
   HIDDEN: "HIDDEN",
   CORRECT: "CORRECT",
+  INCORRECT: "INCORRECT",
 };
 
 export class WordComponent {
   constructor(canvas, text, fillColor, textColor) {
-    if (fillColor === void 0) {
+    if (fillColor === undefined) {
       fillColor = "#ffffff";
     }
-    if (textColor === void 0) {
+    if (textColor === undefined) {
       textColor = "#000000";
     }
     this.x = 10;
@@ -29,7 +30,8 @@ export class WordComponent {
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
     this.target = null;
-    this.speed = 200;
+    this.speedDefault = 200;
+    this.speed = this.speedDefault;
   }
   draw() {
     if (this.state !== WordState.HIDDEN) {
@@ -46,13 +48,13 @@ export class WordComponent {
         this.y + this.height / 2,
         this.width,
       );
-      this.ctx.restore();
       if (this.state === WordState.CORRECT) {
         const dw = ((this.width - this.minWidth) / this.speed) * -1;
         const dh = ((this.height - this.minHeight) / this.speed) * -1;
         this.width += dw;
         this.height += dh;
       }
+      this.ctx.restore();
     }
   }
   move() {
@@ -62,6 +64,9 @@ export class WordComponent {
     if (!shouldMove) {
       this.dx = 0;
       this.dy = 0;
+      if (this.state !== WordState.CORRECT) {
+        this.state = WordState.INCORRECT;
+      }
       return false;
     }
     this.setPosition(this.x + this.dx, this.y + this.dy);
@@ -85,6 +90,10 @@ export class WordComponent {
   setCorrect() {
     this.state = WordState.CORRECT;
     this.speed = 10;
+  }
+  setLevel(level = 1) {
+    const decrement = level * 10;
+    this.speed = Math.max(this.speedDefault - decrement, 10);
   }
   inBounds(mouseX, mouseY) {
     return !(

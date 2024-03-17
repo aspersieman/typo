@@ -1,21 +1,21 @@
-export class ScoreComponent {
+export class LifeComponent {
   constructor(canvas, fillColor, textColor) {
     if (fillColor === undefined) {
       fillColor = "rgba(0, 0, 0, 1)";
     }
     if (textColor === undefined) {
-      textColor = "#33CCFF";
+      textColor = "rgba(255, 40, 40, 1)";
     }
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
-    this.x = 10;
-    this.y = 10;
     this.width = 70;
     this.height = 20;
+    this.x = this.canvas.width - this.width - 10;
+    this.y = 40;
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = "VISIBLE";
-    this.score = 0;
+    this.lives = 3;
   }
   draw() {
     if (this.state === "VISIBLE") {
@@ -32,13 +32,14 @@ export class ScoreComponent {
       this.ctx.textBaseline = "middle";
       this.ctx.font = "13px arial";
       this.ctx.fillStyle = this.textColor;
-      this.ctx.fillText(
-        `Score: ${this.score}`,
-        this.x + this.width / 2,
-        this.y + this.height / 2,
-        this.width,
-      );
-      this.ctx.stroke();
+      for (let i = 0; i < this.lives; i++) {
+        this.ctx.fillText(
+          "❤️",
+          this.x + i * 20 + 15,
+          this.y + this.height / 2,
+          this.width,
+        );
+      }
       this.ctx.restore();
     }
   }
