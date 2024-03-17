@@ -116,7 +116,7 @@ export class Game {
       );
       if (response.ok) {
         let list = await response.json();
-        makeWords(list);
+        this.makeWords(list);
         this.loadingWordCount = false;
         return list;
       }
