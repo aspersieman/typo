@@ -28,6 +28,7 @@ export class Game {
   constructor(appEnv) {
     this.appEnv = appEnv;
     this.canvas = document.getElementById("canvas");
+    this.setCanvasDimensions();
     this.ctx = this.canvas.getContext("2d");
     this.state = GameState.NOT_STARTED;
     this.minWordCount = 5;
@@ -67,6 +68,7 @@ export class Game {
 
   reset() {
     this.ctx.fillStyle = "rgb(0 0 0)";
+    document.body.style.backgroundColor = this.ctx.fillStyle;
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
@@ -76,6 +78,11 @@ export class Game {
     } else {
       throw new Error(`Invalid game state: ${s}`);
     }
+  }
+
+  setCanvasDimensions() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight - 100;
   }
 
   gameOver() {
@@ -184,9 +191,9 @@ export class Game {
       this.floor.push(
         new TriangleComponent(
           this.canvas,
-          new Point(x1, 575),
-          new Point(x2, 600),
-          new Point(x3, 600),
+          new Point(x1, this.canvas.height - 25),
+          new Point(x2, this.canvas.height),
+          new Point(x3, this.canvas.height),
         ),
       );
       x1 += 100;
@@ -292,6 +299,7 @@ export class Game {
 
   listeners() {
     window.onresize = () => {
+      this.setCanvasDimensions();
       this.wordMaxHeight = this.canvas.height - 25;
       this.initTextInput();
     };
