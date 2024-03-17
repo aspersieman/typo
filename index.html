@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <title>Typo - Word Game</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="style.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="imgs/keyboard.png" />
-  </head>
 
-  <body>
-    <canvas id="canvas" width="600" height="600"></canvas>
-    <script type="importmap">
+<head>
+  <title>Typo - Word Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="style.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="imgs/keyboard.png" />
+</head>
+
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <script type="importmap">
       {
         "imports": {
           "game": "./game/game.js",
@@ -20,11 +21,13 @@
           "game.triangle": "./game/components/triangle.js",
           "game.score": "./game/components/score.js",
           "game.gameover": "./game/screens/gameover.js",
+          "game.countdown": "./game/screens/countdown.js",
           "utils.log": "./game/utils/log.js",
           "utils.geometry": "./game/utils/geometry.js"
         }
       }
     </script>
-    <script type="module" src="script.js"></script>
-  </body>
+  <script type="module" src="script.js"></script>
+</body>
+
 </html>

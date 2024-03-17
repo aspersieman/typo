@@ -4,6 +4,7 @@ import { ParticleComponent } from "game.particle";
 import { TriangleComponent } from "game.triangle";
 import { ScoreComponent } from "game.score";
 import { GameOverScreen } from "game.gameover";
+import { CountdownScreen } from "game.countdown";
 import { log } from "utils.log";
 import { Point } from "utils.geometry";
 // TODO: Implement scenes, include base class with common functions
@@ -13,6 +14,7 @@ import { Point } from "utils.geometry";
 
 export const GameState = {
   NOT_STARTED: "NOT_STARTED",
+  COUNTDOWN: "COUNTDOWN",
   STARTED: "STARTED",
   SET_PAUSE: "SET_PAUSE",
   PAUSED: "PAUSED",
@@ -51,6 +53,13 @@ export class Game {
       "Game Over",
       "#001122",
       "#FF5733",
+    );
+    this.countdownScreen = new CountdownScreen(
+      this,
+      this.canvas,
+      "Get ready",
+      "#001122",
+      "#F0F0F0",
     );
     this.init();
   }
@@ -120,10 +129,18 @@ export class Game {
     btnStartGame.setPosition(this.canvas.width / 2 - 100, 150);
     btnStartGame.setSize(200, 75);
     btnStartGame.onClick = () => {
-      btnStartGame.hide();
-      this.setState(GameState.STARTED);
-      this.textInput.style.display = "block";
-      return log("Start Game!");
+      if (btnStartGame.state === "VISIBLE") {
+        btnStartGame.hide();
+        if (this.state === GameState.NOT_STARTED) {
+          this.setState(GameState.COUNTDOWN);
+          return log("Countdown");
+        } else {
+          this.setState(GameState.STARTED);
+          this.textInput.style.display = "block";
+          this.textInput.focus();
+          return log("Start Game!");
+        }
+      }
     };
     this.addButton("BTN_START_GAME", btnStartGame);
 
@@ -139,7 +156,7 @@ export class Game {
     btnContinueGame.onClick = () => {
       btnContinueGame.hide();
       this.textInput.style.display = "block";
-      this.setState(GameState.STARTED);
+      this.setState(GameState.COUNTDOWN);
       return log("Continued!");
     };
     this.addButton("BTN_CONTINUE_GAME", btnContinueGame);
@@ -209,7 +226,7 @@ export class Game {
   }
 
   init() {
-    log();
+    log("game init");
     this.initWords();
     this.initButtons();
     this.initFloor();
@@ -258,7 +275,8 @@ export class Game {
       const y = event.clientY - rect.top;
       Object.keys(this.buttons).forEach((b) => {
         const btn = this.buttons[b];
-        if (btn.inBounds(x, y) && !!btn.onClick) btn.onClick();
+        if (btn.inBounds(x, y) && !!btn.onClick && btn.state === "VISIBLE")
+          btn.onClick();
       });
       // TODO: This is ugly find a way to handle this per screen
       Object.keys(this.gameOverScreen.buttons).forEach((b) => {
@@ -308,9 +326,11 @@ export class Game {
         const px =
           this.words[wordCount - 1].x + this.words[wordCount - 1].width / 2;
         this.initParticles(px, this.words[wordCount - 1].y);
+        console.log("popping");
         this.words.pop();
         wordCount = this.words.length;
       }
+      wordCount = this.words.length;
       if (wordCount > 0) {
         this.words[wordCount - 1].draw();
       }
@@ -327,9 +347,15 @@ export class Game {
   }
 
   run() {
+    console.log(this.state);
     this.reset();
     this.drawButtons();
+    if (this.state === GameState.COUNTDOWN) {
+      this.countdownScreen.show();
+      this.countdownScreen.draw();
+    }
     if (this.state === GameState.STARTED) {
+      this.countdownScreen.hide();
       this.gameOverScreen.hide();
       this.score.draw();
       this.drawFloor();

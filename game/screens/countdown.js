@@ -1,8 +1,6 @@
-import { ButtonComponent } from "game.button";
-import { ScoreComponent } from "game.score";
 import { GameState } from "game";
 
-export class GameOverScreen {
+export class CountdownScreen {
   constructor(game, canvas, title, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
@@ -21,9 +19,8 @@ export class GameOverScreen {
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = "HIDDEN";
-    this.buttons = {};
-    this.initButtons();
-    this.score = new ScoreComponent(this.canvas);
+    this.countdown = 3;
+    this.timer = null;
   }
   draw() {
     if (this.state === "VISIBLE") {
@@ -46,56 +43,35 @@ export class GameOverScreen {
         this.y + this.height * 0.25,
         this.width,
       );
-      this.drawButtons();
-      this.score.setScore(this.game.score.score);
-      this.score.setPosition(
-        this.canvas.width / 2 - this.score.width / 2,
-        this.canvas.height / 2 - this.score.height / 2,
+      this.ctx.fillText(
+        this.countdown.toString(),
+        this.x + this.width / 2,
+        this.y + this.height * 0.5,
+        this.width,
       );
-      this.score.draw();
+      if (this.countdown > 0) {
+        const now = new Date().getTime();
+        this.tick(now);
+      } else {
+        this.game.textInput.style.display = "block";
+        this.game.textInput.focus();
+        this.state = "HIDDEN";
+        this.game.state = GameState.STARTED;
+        this.timer = null;
+        this.countdown = 3;
+      }
       this.ctx.restore();
     }
   }
-  addButton(id, button) {
-    if (!id) {
-      throw new Error("Button id is required");
+  tick(ts) {
+    if (!this.timer) {
+      this.timer = ts;
+      return;
     }
-    if (!button) {
-      throw new Error("Button is required");
+    if (ts - this.timer > 1000) {
+      this.timer = ts;
+      this.countdown--;
     }
-    if (!Object.keys(this.buttons).includes(id)) {
-      this.buttons[id] = button;
-    }
-  }
-  initButtons() {
-    const btnRestartGame = new ButtonComponent(
-      this.canvas,
-      "Restart",
-      "#FF5733",
-      "#001122",
-    );
-    btnRestartGame.setPosition(
-      this.canvas.width / 2 - 100,
-      this.canvas.height * 0.75,
-    );
-    btnRestartGame.setSize(200, 75);
-    btnRestartGame.hide();
-    btnRestartGame.onClick = () => {
-      if (btnRestartGame.state === "VISIBLE") {
-        btnRestartGame.hide();
-        this.game.initWords();
-        this.game.setState(GameState.COUNTDOWN);
-        this.hide();
-        return console.log("Restarted!");
-      }
-    };
-    this.addButton("BTN_RESTART_GAME", btnRestartGame);
-    this.buttons["BTN_RESTART_GAME"].show();
-  }
-  drawButtons() {
-    Object.keys(this.buttons).forEach((b) => {
-      return this.buttons[b].draw();
-    });
   }
   setPosition(x, y) {
     this.x = x;
@@ -115,10 +91,8 @@ export class GameOverScreen {
   }
   hide() {
     this.state = "HIDDEN";
-    this.buttons["BTN_RESTART_GAME"].hide();
   }
   show() {
     this.state = "VISIBLE";
-    this.buttons["BTN_RESTART_GAME"].show();
   }
 }

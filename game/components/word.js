@@ -56,7 +56,6 @@ export class WordComponent {
     }
   }
   move() {
-    console.log("Word dx, dy: ", this.dx, this.dy);
     const shouldMove =
       Math.abs(this.x - this.target.x) > 1 ||
       Math.abs(this.y - this.target.y) > 1;
