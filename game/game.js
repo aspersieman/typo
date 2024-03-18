@@ -12,8 +12,6 @@ import { log } from "utils.log";
 import { Point } from "utils.geometry";
 
 // TODO: Implement pallette for various colours
-// TODO: Make work in full window mode
-// TODO: Make work in full screen mode
 
 export const GameState = {
   NOT_STARTED: "NOT_STARTED",
@@ -415,6 +413,20 @@ export class Game {
   run(time = 0) {
     this.reset();
     this.drawButtons();
+    console.log(this.state);
+    if (this.state === GameState.NOT_STARTED) {
+      this.ctx.strokeStyle = "#eeaa00";
+      this.ctx.fillStyle = "#eeaa00";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.font = "25px arial";
+      this.ctx.fillText(
+        "Type the falling text in the box at the bottom",
+        10 + this.canvas.width / 2,
+        10 + this.canvas.height * 0.75,
+        this.canvas.width,
+      );
+    }
     if (this.state === GameState.COUNTDOWN) {
       this.countdownScreen.show();
       this.countdownScreen.draw();
