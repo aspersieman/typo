@@ -281,9 +281,9 @@ export class Game {
     if (e.key === "Enter" && this.state === GameState.STARTED) {
       const t = e.target.value.trim().toLowerCase();
       if (t !== "") {
-        if (t === this.words[this.words.length - 1].text) {
-          this.words[this.words.length - 1].setCorrect();
-          this.words[this.words.length - 1].setDestination(
+        if (this.words.length > 0 && t === this.words[0].text) {
+          this.words[0].setCorrect();
+          this.words[0].setDestination(
             this.score.x + this.score.width / 2,
             this.score.y + this.score.height / 2,
           );
@@ -368,33 +368,32 @@ export class Game {
   }
 
   drawWord(time = 0) {
-    let wordCount = this.words.length;
-    if (wordCount > 0 && this.life.lives > 0) {
-      if (!this.words[wordCount - 1].move()) {
-        const px =
-          this.words[wordCount - 1].x + this.words[wordCount - 1].width / 2;
-        if (this.words[wordCount - 1].state === WordState.INCORRECT) {
+    if (this.words.length > 0 && this.life.lives > 0) {
+      if (!this.words[0].move()) {
+        const px = this.words[0].x + this.words[0].width / 2;
+        if (this.words[0].state === WordState.INCORRECT) {
           this.life.decrement();
-          this.initParticles(px, this.words[wordCount - 1].y);
+          this.initParticles(px, this.words[0].y);
         }
-        if (this.words[wordCount - 1].state === WordState.CORRECT) {
-          this.initConfetti(this.words[wordCount - 1].y);
+        if (this.words[0].state === WordState.CORRECT) {
+          this.initConfetti(this.words[0].y);
         }
-        this.words.pop();
+        this.words.shift();
         this.textInput.value = "";
         this.wordsCompleted++;
 
         if (this.wordsCompleted % 10 === 0) {
           this.level.increment();
         }
-        wordCount = this.words.length;
       }
-      wordCount = this.words.length;
-      if (wordCount > 0) {
-        this.words[wordCount - 1].draw();
+      if (this.words.length > 0) {
+        this.words[0].draw();
       }
     }
-    if (wordCount < this.minWordCount && this.loadingWordCount === false) {
+    if (
+      this.words.length < this.minWordCount &&
+      this.loadingWordCount === false
+    ) {
       this.loadingWordCount = true;
       this.initWords();
     }
@@ -402,7 +401,8 @@ export class Game {
     this.drawExplosion();
     this.drawConfetti(time);
     if (
-      (this.life.lives <= 0 || (wordCount <= 0 && !this.loadingWordCount)) &&
+      (this.life.lives <= 0 ||
+        (this.words.length <= 0 && !this.loadingWordCount)) &&
       !this.exploding &&
       !this.confettiing
     ) {
@@ -413,7 +413,6 @@ export class Game {
   run(time = 0) {
     this.reset();
     this.drawButtons();
-    console.log(this.state);
     if (this.state === GameState.NOT_STARTED) {
       this.ctx.strokeStyle = "#eeaa00";
       this.ctx.fillStyle = "#eeaa00";
