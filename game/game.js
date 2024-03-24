@@ -8,6 +8,7 @@ import { LifeComponent } from "game.life";
 import { LevelComponent } from "game.level";
 import { GameOverScreen } from "game.gameover";
 import { CountdownScreen } from "game.countdown";
+import { LoadingScreen } from "game.loading";
 import { log } from "utils.log";
 import { Point } from "utils.geometry";
 
@@ -30,7 +31,7 @@ export class Game {
     this.setCanvasDimensions();
     this.ctx = this.canvas.getContext("2d");
     this.audioCtx = new AudioContext();
-    this.state = GameState.NOT_STARTED;
+    this.state = GameState.LOADING;
     this.minWordCount = 5;
     this.loadingWordCount = false;
     this.words = [];
@@ -63,6 +64,13 @@ export class Game {
       this,
       this.canvas,
       "Get ready",
+      "#001122",
+      "#F0F0F0",
+    );
+    this.loadingScreen = new LoadingScreen(
+      this,
+      this.canvas,
+      "Loading...",
       "#001122",
       "#F0F0F0",
     );
@@ -291,14 +299,20 @@ export class Game {
 
   init() {
     log("game init");
+    this.loadingScreen.show();
     this.initWords();
     this.initButtons();
     this.initFloor();
     this.initTextInput();
     this.listeners();
-    this.loadFile("/sound/fading-away.ogg").then((track) => {
-      this.trackBackground = track;
-    });
+    this.loadFile("/sound/fading-away.ogg")
+      .then((track) => {
+        this.trackBackground = track;
+      })
+      .then(() => {
+        this.setState(GameState.NOT_STARTED);
+        this.loadingScreen.hide();
+      });
   }
 
   addButton(id, button) {
@@ -490,7 +504,12 @@ export class Game {
 
   run(time = 0) {
     this.reset();
-    this.drawButtons();
+    if (this.state === GameState.LOADING) {
+      this.loadingScreen.draw();
+    } else {
+      this.loadingScreen.hide();
+      this.drawButtons();
+    }
     if (this.state === GameState.NOT_STARTED) {
       this.ctx.strokeStyle = "#eeaa00";
       this.ctx.fillStyle = "#eeaa00";

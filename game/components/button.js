@@ -18,7 +18,6 @@ export class ButtonComponent {
     this.ctx = this.canvas.getContext("2d");
     this.font = "25px arial";
     this.borderRadius = 5;
-    this.circle = new Path2D();
     this.lineWidth = 2;
   }
   draw() {
