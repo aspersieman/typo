@@ -16,29 +16,28 @@ export class LevelComponent {
     this.textColor = textColor;
     this.state = "VISIBLE";
     this.level = 0;
+    this.lineWidth = 3;
   }
   draw() {
     if (this.state === "VISIBLE") {
-      this.ctx.save();
-      this.ctx.lineWidth = 0;
-      this.ctx.strokeStyle = this.textColor;
-      this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.fillStyle = this.fillColor;
       this.ctx.roundRect(this.x, this.y, this.width, this.height, 2);
       this.ctx.fill();
       this.ctx.stroke();
+      this.ctx.closePath();
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
       this.ctx.font = "13px arial";
       this.ctx.fillStyle = this.textColor;
+      this.ctx.beginPath();
       this.ctx.fillText(
         `Level: ${this.level}`,
         this.x + this.width / 2,
         this.y + this.height / 2,
         this.width,
       );
-      this.ctx.restore();
+      this.ctx.closePath();
     }
   }
   setLevel(level) {

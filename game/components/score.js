@@ -16,15 +16,14 @@ export class ScoreComponent {
     this.textColor = textColor;
     this.state = "VISIBLE";
     this.score = 0;
+    this.lineWidth = 2;
   }
   draw() {
     if (this.state === "VISIBLE") {
-      this.ctx.save();
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeStyle = this.textColor;
-      this.ctx.stroke();
       this.ctx.beginPath();
       this.ctx.fillStyle = this.fillColor;
+      this.ctx.strokeStyle = this.textColor;
+      this.ctx.lineWidth = this.lineWidth;
       this.ctx.roundRect(this.x, this.y, this.width, this.height, 2);
       this.ctx.fill();
       this.ctx.stroke();
@@ -38,8 +37,7 @@ export class ScoreComponent {
         this.y + this.height / 2,
         this.width,
       );
-      this.ctx.stroke();
-      this.ctx.restore();
+      this.ctx.closePath();
     }
   }
   setScore(score) {

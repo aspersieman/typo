@@ -54,6 +54,8 @@ export class WordComponent {
         this.width += dw;
         this.height += dh;
       }
+      this.ctx.closePath();
+      this.ctx.restore();
     }
   }
   move() {

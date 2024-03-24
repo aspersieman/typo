@@ -60,6 +60,7 @@ export class CountdownScreen {
         this.timer = null;
         this.countdown = 3;
       }
+      this.ctx.closePath();
       this.ctx.restore();
     }
   }

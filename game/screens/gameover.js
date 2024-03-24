@@ -1,6 +1,5 @@
 import { ButtonComponent } from "game.button";
 import { ScoreComponent } from "game.score";
-import { GameState } from "game";
 
 export class GameOverScreen {
   constructor(game, canvas, title, fillColor, textColor) {
@@ -46,6 +45,8 @@ export class GameOverScreen {
         this.y + this.height * 0.25,
         this.width,
       );
+      this.ctx.closePath();
+      this.ctx.restore();
       this.drawButtons();
       this.score.setScore(this.game.score.score);
       this.score.setPosition(
@@ -53,7 +54,6 @@ export class GameOverScreen {
         this.canvas.height / 2 - this.score.height / 2,
       );
       this.score.draw();
-      this.ctx.restore();
     }
   }
   addButton(id, button) {

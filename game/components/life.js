@@ -40,6 +40,7 @@ export class LifeComponent {
           this.width,
         );
       }
+      this.ctx.closePath();
       this.ctx.restore();
     }
   }

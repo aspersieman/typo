@@ -14,6 +14,7 @@ import { Point } from "utils.geometry";
 // TODO: Implement pallette for various colours
 
 export const GameState = {
+  LOADING: "LOADING",
   NOT_STARTED: "NOT_STARTED",
   COUNTDOWN: "COUNTDOWN",
   STARTED: "STARTED",
@@ -28,6 +29,7 @@ export class Game {
     this.canvas = document.getElementById("canvas");
     this.setCanvasDimensions();
     this.ctx = this.canvas.getContext("2d");
+    this.audioCtx = new AudioContext();
     this.state = GameState.NOT_STARTED;
     this.minWordCount = 5;
     this.loadingWordCount = false;
@@ -47,6 +49,9 @@ export class Game {
     this.score = new ScoreComponent(this.canvas);
     this.level = new LevelComponent(this.canvas);
     this.life = new LifeComponent(this.canvas);
+    this.trackOffset = 0;
+    this.trackBackground = null;
+    this.trackBackgroundStarted = false;
     this.gameOverScreen = new GameOverScreen(
       this,
       this.canvas,
@@ -150,6 +155,9 @@ export class Game {
     btnStartGame.onClick = () => {
       if (btnStartGame.state === "VISIBLE") {
         btnStartGame.hide();
+        btnPlayPause.playing = true;
+        btnPlayPause.text = "🎵⏸️";
+        this.mute(false);
         if (this.state === GameState.NOT_STARTED) {
           this.setState(GameState.COUNTDOWN);
           return log("Countdown");
@@ -179,6 +187,31 @@ export class Game {
       return log("Continued!");
     };
     this.addButton("BTN_CONTINUE_GAME", btnContinueGame);
+
+    const btnPlayPause = new ButtonComponent(
+      this.canvas,
+      "🎵▶️",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 1)",
+    );
+    btnPlayPause.font = "20px arial";
+    btnPlayPause.setPosition(this.canvas.width - 70, this.canvas.height - 70);
+    btnPlayPause.setSize(60, 30);
+    btnPlayPause.playing = false;
+    btnPlayPause.onClick = () => {
+      if (btnPlayPause.state === "VISIBLE") {
+        if (btnPlayPause.playing && this.trackBackgroundStarted) {
+          btnPlayPause.playing = false;
+          btnPlayPause.text = "🎵▶️";
+          this.mute(true);
+        } else {
+          btnPlayPause.playing = true;
+          btnPlayPause.text = "🎵⏸️";
+          this.mute(false);
+        }
+      }
+    };
+    this.addButton("BTN_PLAY_PAUSE", btnPlayPause);
   }
 
   initFloor() {
@@ -263,6 +296,9 @@ export class Game {
     this.initFloor();
     this.initTextInput();
     this.listeners();
+    this.loadFile("/sound/fading-away.ogg").then((track) => {
+      this.trackBackground = track;
+    });
   }
 
   addButton(id, button) {
@@ -407,6 +443,48 @@ export class Game {
       !this.confettiing
     ) {
       this.gameOver();
+    }
+  }
+
+  async getFile(filepath) {
+    const response = await fetch(filepath);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+    return audioBuffer;
+  }
+
+  async loadFile(filePath) {
+    const track = await this.getFile(filePath);
+    return track;
+  }
+
+  playTrack(audioBuffer) {
+    const trackSource = new AudioBufferSourceNode(this.audioCtx, {
+      buffer: audioBuffer,
+    });
+    trackSource.connect(this.audioCtx.destination);
+
+    if (this.trackOffset == 0) {
+      trackSource.start();
+      this.trackOffset = this.audioCtx.currentTime;
+    } else {
+      trackSource.start(0, this.audioCtx.currentTime - this.trackOffset);
+    }
+
+    return trackSource;
+  }
+
+  mute(active = true) {
+    if (!active && !this.trackBackgroundStarted) {
+      this.trackBackgroundStarted = true;
+      const source = this.playTrack(this.trackBackground);
+      source.loop = true;
+    }
+    if (!active && this.trackBackgroundStarted) {
+      this.audioCtx.resume();
+    }
+    if (active && this.trackBackgroundStarted) {
+      this.audioCtx.suspend();
     }
   }
 

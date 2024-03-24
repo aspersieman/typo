@@ -16,26 +16,38 @@ export class ButtonComponent {
     this.state = "VISIBLE";
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
+    this.font = "25px arial";
+    this.borderRadius = 5;
+    this.circle = new Path2D();
+    this.lineWidth = 2;
   }
   draw() {
     if (this.state === "VISIBLE") {
       this.ctx.save();
       this.ctx.fillStyle = this.fillColor;
-      this.ctx.strokeStyle = this.fillColor;
+      this.ctx.strokeStyle = this.textColor;
+      this.ctx.lineWidth = this.lineWidth;
       this.ctx.beginPath();
-      this.ctx.roundRect(this.x, this.y, this.width, this.height, 5);
+      this.ctx.roundRect(
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+        this.borderRadius,
+      );
       this.ctx.stroke();
       this.ctx.fill();
       this.ctx.fillStyle = this.textColor;
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
-      this.ctx.font = "25px arial";
+      this.ctx.font = this.font;
       this.ctx.fillText(
         this.text,
         this.x + this.width / 2,
         this.y + this.height / 2,
         this.width,
       );
+      this.ctx.closePath();
       this.ctx.restore();
     }
   }
