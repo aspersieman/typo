@@ -517,7 +517,7 @@ export class Game {
       this.ctx.textBaseline = "middle";
       this.ctx.font = "25px arial";
       this.ctx.fillText(
-        "Type the falling text in the box at the bottom",
+        "Type the falling text and hit ENTER↲",
         10 + this.canvas.width / 2,
         10 + this.canvas.height * 0.75,
         this.canvas.width,
