@@ -305,7 +305,7 @@ export class Game {
     this.initFloor();
     this.initTextInput();
     this.listeners();
-    this.loadFile("/sound/fading-away.ogg")
+    this.loadFile("fading-away.ogg")
       .then((track) => {
         this.trackBackground = track;
       })
