@@ -51,7 +51,7 @@ export class GameOverScreen {
       this.score.setScore(this.game.score.score);
       this.score.setPosition(
         this.canvas.width / 2 - this.score.width / 2,
-        this.canvas.height / 2 - this.score.height / 2,
+        this.canvas.height * 0.45 - this.score.height / 2,
       );
       this.score.draw();
     }

@@ -91,6 +91,7 @@ export class Game {
     this.score.setScore(0);
     this.level.setLevel(1);
     this.life.setLives(3);
+    this.words = [];
     this.initWords();
     this.setState(GameState.COUNTDOWN);
   }
@@ -523,6 +524,7 @@ export class Game {
       this.buttons["BTN_CONTINUE_GAME"].show();
     }
     if (this.state === GameState.GAME_OVER) {
+      this.difficultyRadios.show();
       this.textInput.style.display = "none";
       this.gameOverScreen.show();
       this.gameOverScreen.draw();
