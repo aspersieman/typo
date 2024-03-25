@@ -6,9 +6,11 @@ import { TriangleComponent } from "game.triangle";
 import { ScoreComponent } from "game.score";
 import { LifeComponent } from "game.life";
 import { LevelComponent } from "game.level";
+import { DifficultyComponent } from "game.difficulty";
 import { GameOverScreen } from "game.gameover";
 import { CountdownScreen } from "game.countdown";
 import { LoadingScreen } from "game.loading";
+import { playTrack, loadFile, audioCtx } from "utils.sound";
 import { log } from "utils.log";
 import { Point } from "utils.geometry";
 
@@ -24,13 +26,19 @@ export const GameState = {
   GAME_OVER: "GAME_OVER",
 };
 
+export const Difficulty = {
+  EASY: "EASY",
+  NORMAL: "NORMAL",
+  HARD: "HARD",
+  EXPERT: "EXPERT",
+};
+
 export class Game {
   constructor(appEnv) {
     this.appEnv = appEnv;
     this.canvas = document.getElementById("canvas");
     this.setCanvasDimensions();
     this.ctx = this.canvas.getContext("2d");
-    this.audioCtx = new AudioContext();
     this.state = GameState.LOADING;
     this.minWordCount = 5;
     this.loadingWordCount = false;
@@ -44,36 +52,15 @@ export class Game {
     this.lastConfettiTime = 0;
     this.exploding = false;
     this.confettiing = false;
+    this.difficulty = Difficulty.NORMAL;
     this.floor = [];
     this.textInput = null;
     this.wordMaxHeight = this.canvas.height - 25;
     this.score = new ScoreComponent(this.canvas);
     this.level = new LevelComponent(this.canvas);
     this.life = new LifeComponent(this.canvas);
-    this.trackOffset = 0;
     this.trackBackground = null;
     this.trackBackgroundStarted = false;
-    this.gameOverScreen = new GameOverScreen(
-      this,
-      this.canvas,
-      "Game Over",
-      "#001122",
-      "#FF5733",
-    );
-    this.countdownScreen = new CountdownScreen(
-      this,
-      this.canvas,
-      "Get ready",
-      "#001122",
-      "#F0F0F0",
-    );
-    this.loadingScreen = new LoadingScreen(
-      this,
-      this.canvas,
-      "Loading...",
-      "#001122",
-      "#F0F0F0",
-    );
     this.init();
   }
 
@@ -115,6 +102,7 @@ export class Game {
       word.setSize(200, 75);
       word.setDestination(canvas.width / 2 - 100, this.wordMaxHeight);
       word.setLevel(this.level.level);
+      word.setDifficulty(this.difficulty);
       this.words.push(word);
     });
   }
@@ -167,6 +155,7 @@ export class Game {
         btnPlayPause.text = "🎵⏸️";
         this.mute(false);
         if (this.state === GameState.NOT_STARTED) {
+          this.initWords();
           this.setState(GameState.COUNTDOWN);
           return log("Countdown");
         } else {
@@ -299,13 +288,31 @@ export class Game {
 
   init() {
     log("game init");
+    this.difficultyRadios = new DifficultyComponent(this, null, "#eeaa00");
+    this.gameOverScreen = new GameOverScreen(
+      this,
+      "Game Over",
+      "#001122",
+      "#FF5733",
+    );
+    this.countdownScreen = new CountdownScreen(
+      this,
+      "Get ready",
+      "#001122",
+      "#F0F0F0",
+    );
+    this.loadingScreen = new LoadingScreen(
+      this,
+      "Loading...",
+      "#001122",
+      "#F0F0F0",
+    );
     this.loadingScreen.show();
-    this.initWords();
     this.initButtons();
     this.initFloor();
     this.initTextInput();
-    this.listeners();
-    this.loadFile("fading-away.ogg")
+    this.initListeners();
+    loadFile("fading-away.ogg")
       .then((track) => {
         this.trackBackground = track;
       })
@@ -332,11 +339,11 @@ export class Game {
       const t = e.target.value.trim().toLowerCase();
       if (t !== "") {
         if (this.words.length > 0 && t === this.words[0].text) {
-          this.words[0].setCorrect();
           this.words[0].setDestination(
             this.score.x + this.score.width / 2,
             this.score.y + this.score.height / 2,
           );
+          this.words[0].setCorrect();
           this.score.increment();
         }
         e.target.value = "";
@@ -345,7 +352,7 @@ export class Game {
     }
   };
 
-  listeners() {
+  initListeners() {
     window.onresize = () => {
       this.setCanvasDimensions();
       this.wordMaxHeight = this.canvas.height - 25;
@@ -460,45 +467,17 @@ export class Game {
     }
   }
 
-  async getFile(filepath) {
-    const response = await fetch(filepath);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
-    return audioBuffer;
-  }
-
-  async loadFile(filePath) {
-    const track = await this.getFile(filePath);
-    return track;
-  }
-
-  playTrack(audioBuffer) {
-    const trackSource = new AudioBufferSourceNode(this.audioCtx, {
-      buffer: audioBuffer,
-    });
-    trackSource.connect(this.audioCtx.destination);
-
-    if (this.trackOffset == 0) {
-      trackSource.start();
-      this.trackOffset = this.audioCtx.currentTime;
-    } else {
-      trackSource.start(0, this.audioCtx.currentTime - this.trackOffset);
-    }
-
-    return trackSource;
-  }
-
   mute(active = true) {
     if (!active && !this.trackBackgroundStarted) {
       this.trackBackgroundStarted = true;
-      const source = this.playTrack(this.trackBackground);
+      const source = playTrack(this.trackBackground);
       source.loop = true;
     }
     if (!active && this.trackBackgroundStarted) {
-      this.audioCtx.resume();
+      audioCtx.resume();
     }
     if (active && this.trackBackgroundStarted) {
-      this.audioCtx.suspend();
+      audioCtx.suspend();
     }
   }
 
@@ -511,6 +490,7 @@ export class Game {
       this.drawButtons();
     }
     if (this.state === GameState.NOT_STARTED) {
+      this.difficultyRadios.show();
       this.ctx.strokeStyle = "#eeaa00";
       this.ctx.fillStyle = "#eeaa00";
       this.ctx.textAlign = "center";
@@ -524,10 +504,12 @@ export class Game {
       );
     }
     if (this.state === GameState.COUNTDOWN) {
+      this.difficultyRadios.hide();
       this.countdownScreen.show();
       this.countdownScreen.draw();
     }
     if (this.state === GameState.STARTED) {
+      this.difficultyRadios.hide();
       this.countdownScreen.hide();
       this.gameOverScreen.hide();
       this.score.draw();

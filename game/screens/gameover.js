@@ -2,16 +2,16 @@ import { ButtonComponent } from "game.button";
 import { ScoreComponent } from "game.score";
 
 export class GameOverScreen {
-  constructor(game, canvas, title, fillColor, textColor) {
+  constructor(game, title, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
     }
     if (textColor === void 0) {
       textColor = "#000000";
     }
-    this.canvas = canvas;
-    this.ctx = this.canvas.getContext("2d");
     this.game = game;
+    this.canvas = game.canvas;
+    this.ctx = this.canvas.getContext("2d");
     this.x = 0.1 * this.canvas.width;
     this.y = 0.1 * this.canvas.height;
     this.width = this.canvas.width * 0.8;

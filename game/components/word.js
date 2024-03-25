@@ -1,4 +1,5 @@
 import { Point } from "utils.geometry";
+import { Difficulty } from "game";
 
 export const WordState = {
   VISIBLE: "VISIBLE",
@@ -70,6 +71,7 @@ export class WordComponent {
       }
       return false;
     }
+    console.log(this.dx, this.dy);
     this.setPosition(this.x + this.dx, this.y + this.dy);
     return true;
   }
@@ -79,8 +81,6 @@ export class WordComponent {
   }
   setDestination(x, y) {
     this.target = new Point(x, y);
-    this.dx = ((this.x - this.target.x) / this.speed) * -1;
-    this.dy = ((this.y - this.target.y) / this.speed) * -1;
   }
   setSize(width, height) {
     this.width = width;
@@ -90,11 +90,32 @@ export class WordComponent {
   }
   setCorrect() {
     this.state = WordState.CORRECT;
-    this.speed = 10;
+    this.setSpeed(10);
   }
   setLevel(level = 1) {
     const decrement = level * 10;
-    this.speed = Math.max(this.speedDefault - decrement, 10);
+    this.setSpeed(this.speed - decrement);
+  }
+  setSpeed(speed = 200) {
+    this.speed = speed < 10 ? 10 : speed;
+    this.dx = ((this.x - this.target.x) / this.speed) * -1;
+    this.dy = ((this.y - this.target.y) / this.speed) * -1;
+  }
+  setDifficulty(difficulty = Difficulty.NORMAL) {
+    switch (difficulty) {
+      case Difficulty.EASY:
+        this.setSpeed(this.speedDefault * 2);
+        break;
+      case Difficulty.NORMAL:
+        this.setSpeed(this.speedDefault);
+        break;
+      case Difficulty.HARD:
+        this.setSpeed(Math.round(this.speedDefault * 0.75));
+        break;
+      case Difficulty.EXPERT:
+        this.setSpeed(Math.round(this.speedDefault * 0.5));
+        break;
+    }
   }
   inBounds(mouseX, mouseY) {
     return !(

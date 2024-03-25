@@ -1,16 +1,16 @@
 import { GameState } from "game";
 
 export class LoadingScreen {
-  constructor(game, canvas, title, fillColor, textColor) {
+  constructor(game, title, fillColor, textColor) {
     if (fillColor === void 0) {
       fillColor = "#ffffff";
     }
     if (textColor === void 0) {
       textColor = "#000000";
     }
-    this.canvas = canvas;
-    this.ctx = this.canvas.getContext("2d");
     this.game = game;
+    this.canvas = game.canvas;
+    this.ctx = this.canvas.getContext("2d");
     this.width = 200;
     this.height = 200;
     this.centerRadius = 30;
