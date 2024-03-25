@@ -152,7 +152,7 @@ export class Game {
       if (btnStartGame.state === "VISIBLE") {
         btnStartGame.hide();
         btnPlayPause.playing = true;
-        btnPlayPause.text = "🎵⏸️";
+        btnPlayPause.text = "🎵 ⏸️";
         this.mute(false);
         if (this.state === GameState.NOT_STARTED) {
           this.initWords();
@@ -187,7 +187,7 @@ export class Game {
 
     const btnPlayPause = new ButtonComponent(
       this.canvas,
-      "🎵▶️",
+      "🎵 ▶️",
       "rgba(0, 0, 0, 0)",
       "rgba(0, 0, 0, 1)",
     );
@@ -199,11 +199,11 @@ export class Game {
       if (btnPlayPause.state === "VISIBLE") {
         if (btnPlayPause.playing && this.trackBackgroundStarted) {
           btnPlayPause.playing = false;
-          btnPlayPause.text = "🎵▶️";
+          btnPlayPause.text = "🎵 ▶️";
           this.mute(true);
         } else {
           btnPlayPause.playing = true;
-          btnPlayPause.text = "🎵⏸️";
+          btnPlayPause.text = "🎵 ⏸️";
           this.mute(false);
         }
       }
