@@ -71,7 +71,6 @@ export class WordComponent {
       }
       return false;
     }
-    console.log(this.dx, this.dy);
     this.setPosition(this.x + this.dx, this.y + this.dy);
     return true;
   }

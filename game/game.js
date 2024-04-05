@@ -15,6 +15,7 @@ import { log } from "utils.log";
 import { Point } from "utils.geometry";
 
 // TODO: Implement pallette for various colours
+// TODO: Fix dynamic resizing
 
 export const GameState = {
   LOADING: "LOADING",
@@ -151,20 +152,7 @@ export class Game {
     btnStartGame.setSize(200, 75);
     btnStartGame.onClick = () => {
       if (btnStartGame.state === "VISIBLE") {
-        btnStartGame.hide();
-        btnPlayPause.playing = true;
-        btnPlayPause.text = "🎵 ⏸️";
-        this.mute(false);
-        if (this.state === GameState.NOT_STARTED) {
-          this.initWords();
-          this.setState(GameState.COUNTDOWN);
-          return log("Countdown");
-        } else {
-          this.setState(GameState.STARTED);
-          this.textInput.style.display = "block";
-          this.textInput.focus();
-          return log("Start Game!");
-        }
+        this.start();
       }
     };
     this.addButton("BTN_START_GAME", btnStartGame);
@@ -335,6 +323,18 @@ export class Game {
     }
   }
 
+  // TODO: This should be a generic getComponent function
+  getButton(id) {
+    if (!id) {
+      throw new Error("Button id is required");
+    }
+    if (Object.keys(this.buttons).includes(id)) {
+      return this.buttons[id];
+    } else {
+      throw new Error("Could not find button");
+    }
+  }
+
   handleTextInput = (e) => {
     if (e.key === "Enter" && this.state === GameState.STARTED) {
       const t = e.target.value.trim().toLowerCase();
@@ -395,12 +395,6 @@ export class Game {
     if (this.explosionParticles.length === 0) {
       this.exploding = false;
     }
-  }
-
-  drawFloor() {
-    this.floor.forEach((triangle) => {
-      triangle.draw();
-    });
   }
 
   drawButtons() {
@@ -482,6 +476,24 @@ export class Game {
     }
   }
 
+  start() {
+    const btnStartGame = this.getButton("BTN_START_GAME");
+    const btnPlayPause = this.getButton("BTN_PLAY_PAUSE");
+    btnStartGame.hide();
+    // TODO: testing remove
+    // btnPlayPause.playing = true;
+    // btnPlayPause.text = "🎵 ⏸️";
+    // this.mute(false);
+    if (this.state === GameState.NOT_STARTED) {
+      this.initWords();
+      this.setState(GameState.COUNTDOWN);
+    } else {
+      this.setState(GameState.STARTED);
+      this.textInput.style.display = "block";
+      this.textInput.focus();
+    }
+  }
+
   run(time = 0) {
     this.reset();
     if (this.state === GameState.LOADING) {
@@ -516,7 +528,6 @@ export class Game {
       this.score.draw();
       this.level.draw();
       this.life.draw();
-      this.drawFloor();
       this.drawWord(time);
     }
     if (this.state === GameState.SET_PAUSE) {

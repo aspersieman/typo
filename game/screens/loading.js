@@ -1,4 +1,4 @@
-import { GameState } from "game";
+import { ProgressBarComponent } from "../components/progress-bar.js";
 
 export class LoadingScreen {
   constructor(game, title, fillColor, textColor) {
@@ -11,18 +11,14 @@ export class LoadingScreen {
     this.game = game;
     this.canvas = game.canvas;
     this.ctx = this.canvas.getContext("2d");
-    this.width = 200;
+    this.width = 400;
     this.height = 200;
-    this.centerRadius = 30;
     this.x = this.canvas.width / 2 - this.width / 2;
     this.y = this.canvas.height / 2 - this.height / 2;
-    this.translateX = this.x + this.width / 2;
-    this.translateY = this.y + this.height / 2;
     this.title = title;
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = "HIDDEN";
-    this.lineWidth = 15;
     this.lineLength = this.height / 2;
     this.rotateAngle = 3;
     this.borderRadius = this.lineWidth;
@@ -47,57 +43,31 @@ export class LoadingScreen {
     loadingText.style.maxWidth = rect.width - 35 + "px";
     document.body.appendChild(loadingText);
     this.loadingText = loadingText;
-    this.totalRotations = [];
-  }
-  drawLine(deg, style = "rgba(255,255,255,1)") {
-    this.ctx.beginPath();
-    this.ctx.lineWidth = 0;
-    this.ctx.fillStyle = style;
-    this.ctx.strokeStyle = style;
-    this.ctx.translate(this.translateX, this.translateY);
-    this.ctx.lineCap = "round";
-    const rotation = (deg * Math.PI) / 180;
-    this.ctx.rotate(rotation);
-    this.ctx.roundRect(
-      -this.lineWidth / 2,
-      this.centerRadius,
-      this.lineWidth,
-      this.lineLength,
-      this.borderRadius,
+
+    this.progressBar = new ProgressBarComponent(
+      this.game,
+      this.x,
+      this.y,
+      400,
+      10,
     );
-    this.ctx.fill();
-    this.ctx.rotate(-rotation);
-    this.ctx.translate(-this.translateX, -this.translateY);
-    this.ctx.closePath();
+    this.progressBar.hue = 0;
+    this.progressBar.saturation = 0;
+    this.progressBar.luminance = 100;
   }
   draw() {
     if (this.state === "VISIBLE") {
       this.loadingText.style.display = "block";
-      this.ctx.save();
-
-      this.ctx.translate(this.translateX, this.translateY);
-      const rotation = (this.rotateAngle * Math.PI) / 180;
-      this.ctx.rotate(rotation);
-      this.ctx.translate(-this.translateX, -this.translateY);
-
-      this.ctx.beginPath();
-      this.ctx.lineCap = "round";
-      this.ctx.strokeStyle = "#FFF";
-      this.ctx.stroke();
-      this.drawLine(0, "rgba(255,255,255,0.2)");
-      this.drawLine(45, "rgba(255,255,255,0.35)");
-      this.drawLine(90, "rgba(255,255,255,0.5)");
-      this.drawLine(135, "rgba(255,255,255,0.6)");
-      this.drawLine(180, "rgba(255,255,255,0.7)");
-      this.drawLine(225, "rgba(255,255,255,0.8)");
-      this.drawLine(270, "rgba(255,255,255,0.9)");
-      this.drawLine(315);
-      this.ctx.closePath();
-
-      this.ctx.save();
-
-      this.ctx.restore();
+      this.progressBar.update();
+      if (this.progressBar.isDone()) {
+        this.progressBar.reset();
+      }
+      this.progressBar.draw();
     }
+  }
+  reset() {
+    this.ctx.fillStyle = "rgba(0,0,0,0)";
+    this.ctx.fillRect(0, 0, this.width, this.height);
   }
   setPosition(x, y) {
     this.x = x;
@@ -118,10 +88,9 @@ export class LoadingScreen {
   hide() {
     this.state = "HIDDEN";
     this.loadingText.style.display = "none";
-
-    this.ctx.restore();
   }
   show() {
     this.state = "VISIBLE";
+    this.loadingText.style.display = "block";
   }
 }
