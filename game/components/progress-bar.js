@@ -10,6 +10,7 @@ export class ProgressBarComponent {
     this.ctx = this.canvas.getContext("2d");
     this.x = x;
     this.y = y;
+    this.step = 1;
     this.progress = 0;
     this.hue = 0;
     this.saturation = 100;
@@ -41,12 +42,13 @@ export class ProgressBarComponent {
   }
   update() {
     if (this.hueChange) {
-      this.hue += 0.8;
+      this.hue += 0.8 * this.step;
       if (this.hue >= 360) {
         this.hue = 0;
       }
     }
-    this.progress += 2;
+    const s = 1 * this.step;
+    this.progress += s;
   }
   reset() {
     this.progress = 0;

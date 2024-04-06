@@ -33,9 +33,9 @@ export class WordComponent {
     this.textColor = textColor;
     this.state = WordState.VISIBLE;
     this.target = null;
-    this.speedDefault = 200;
-    this.speed = this.speedDefault;
-    this.countdown = 300;
+    this.timer = null;
+    this.endTime = null;
+    this.speed = 200;
     this.progressBar = new ProgressBarComponent(
       this.game,
       this.x,
@@ -70,13 +70,11 @@ export class WordComponent {
       this.ctx.restore();
       if (this.progressBar.isDone()) {
         if (this.state !== WordState.CORRECT) {
-          this.state = WordState.INCORRECT;
           this.progressBar.reset();
           this.progressBar.hide();
         }
       } else {
-        const now = new Date().getTime();
-        this.tick(now);
+        this.progressBar.update();
         this.progressBar.draw();
       }
     }
@@ -125,32 +123,25 @@ export class WordComponent {
   setDifficulty(difficulty = Difficulty.NORMAL) {
     switch (difficulty) {
       case Difficulty.EASY:
-        this.countdown = 10;
+        this.progressBar.step = 1;
         break;
       case Difficulty.NORMAL:
-        this.countdown = 6;
+        this.progressBar.step = 1.1;
         break;
       case Difficulty.HARD:
-        this.countdown = 4;
+        this.progressBar.step = 2;
         break;
       case Difficulty.EXPERT:
-        this.countdown = 4;
+        this.progressBar.step = 2.5;
         break;
     }
   }
   isDone() {
-    return this.progressBar.progress >= this.width;
-  }
-  tick(ts) {
-    if (!this.timer) {
-      this.timer = ts;
-      return;
+    const done = this.progressBar.progress >= this.width;
+    if (done) {
+      this.state = WordState.INCORRECT;
     }
-    if (ts - this.timer > 1000) {
-      this.timer = ts;
-      this.progressBar.update();
-      this.countdown--;
-    }
+    return done;
   }
   inBounds(mouseX, mouseY) {
     return !(
