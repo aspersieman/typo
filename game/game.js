@@ -1,8 +1,7 @@
 import { ButtonComponent } from "game.button";
 import { WordComponent, WordState } from "game.word";
-import { ParticleComponent } from "game.particle";
+import { BubbleComponent } from "game.bubble";
 import { ConfettiComponent } from "game.confetti";
-import { TriangleComponent } from "game.triangle";
 import { ScoreComponent } from "game.score";
 import { LifeComponent } from "game.life";
 import { LevelComponent } from "game.level";
@@ -12,10 +11,10 @@ import { CountdownScreen } from "game.countdown";
 import { LoadingScreen } from "game.loading";
 import { playTrack, loadFile, audioCtx } from "utils.sound";
 import { log } from "utils.log";
-import { Point } from "utils.geometry";
 
 // TODO: Implement pallette for various colours
 // TODO: Fix dynamic resizing
+// TODO: convert all x, y values to Point objects
 
 export const GameState = {
   LOADING: "LOADING",
@@ -46,15 +45,14 @@ export class Game {
     this.words = [];
     this.wordsCompleted = 0;
     this.buttons = {};
-    this.explosionParticleCount = 50;
-    this.explosionParticles = [];
+    this.explosionBubbleCount = 50;
+    this.explosionBubbles = [];
     this.confettiParticleCount = 50;
     this.confettiParticles = [];
     this.lastConfettiTime = 0;
     this.exploding = false;
     this.confettiing = false;
     this.difficulty = Difficulty.NORMAL;
-    this.floor = [];
     this.textInput = null;
     this.wordMaxHeight = this.canvas.height - 25;
     this.score = new ScoreComponent(this.canvas);
@@ -99,10 +97,16 @@ export class Game {
 
   makeWords(list) {
     list.forEach((w) => {
-      const word = new WordComponent(this.canvas, w, "#FF5733", "#001122");
-      word.setPosition(canvas.width / 2 - 100, 0);
-      word.setSize(200, 75);
-      word.setDestination(canvas.width / 2 - 100, this.wordMaxHeight);
+      const word = new WordComponent(
+        this,
+        w,
+        canvas.width / 2 - 100,
+        canvas.height / 2 - 37,
+        200,
+        75,
+        "#FF5733",
+        "#001122",
+      );
       word.setLevel(this.level.level);
       word.setDifficulty(this.difficulty);
       this.words.push(word);
@@ -125,16 +129,16 @@ export class Game {
       alert("Error fetching dictionary");
     } else {
       let list = [
-        "aching",
-        "capable",
-        "handclasp",
+        "the",
+        "spoon",
+        "moon",
         "eloquent",
         "submarine",
-        "enamel",
-        "bargraph",
-        "unicycle",
-        "unbounded",
         "shaded",
+        "out",
+        "boon",
+        "llama",
+        "mango",
       ];
       this.makeWords(list);
     }
@@ -200,31 +204,12 @@ export class Game {
     this.addButton("BTN_PLAY_PAUSE", btnPlayPause);
   }
 
-  initFloor() {
-    let x1 = 50;
-    let x2 = 0;
-    let x3 = 100;
-    for (let i = 0; i < canvas.width; i += 100) {
-      this.floor.push(
-        new TriangleComponent(
-          this.canvas,
-          new Point(x1, this.canvas.height - 25),
-          new Point(x2, this.canvas.height),
-          new Point(x3, this.canvas.height),
-        ),
-      );
-      x1 += 100;
-      x2 += 100;
-      x3 += 100;
-    }
-  }
-
-  initParticles(startX, startY) {
-    for (let i = 1; i <= this.explosionParticleCount; i++) {
+  initBubbles(startX, startY) {
+    for (let i = 1; i <= this.explosionBubbleCount; i++) {
       let dx = (Math.random() - 0.5) * (Math.random() * 6);
       let dy = (Math.random() - 0.5) * (Math.random() * 6);
       let radius = Math.random() * 10;
-      let particle = new ParticleComponent(
+      let bubble = new BubbleComponent(
         this.canvas,
         startX,
         startY,
@@ -232,7 +217,7 @@ export class Game {
         dx,
         dy,
       );
-      this.explosionParticles.push(particle);
+      this.explosionBubbles.push(bubble);
     }
   }
 
@@ -298,7 +283,6 @@ export class Game {
     );
     this.loadingScreen.show();
     this.initButtons();
-    this.initFloor();
     this.initTextInput();
     this.initListeners();
     loadFile("fading-away.ogg")
@@ -383,16 +367,16 @@ export class Game {
     });
   }
 
-  drawExplosion() {
+  drawBubbles() {
     this.exploding = true;
-    this.explosionParticles.forEach((particle, i) => {
-      if (particle.alpha <= 0) {
-        this.explosionParticles.splice(i, 1);
+    this.explosionBubbles.forEach((bubble, i) => {
+      if (bubble.alpha <= 0) {
+        this.explosionBubbles.splice(i, 1);
       } else {
-        particle.move();
+        bubble.move();
       }
     });
-    if (this.explosionParticles.length === 0) {
+    if (this.explosionBubbles.length === 0) {
       this.exploding = false;
     }
   }
@@ -421,11 +405,11 @@ export class Game {
 
   drawWord(time = 0) {
     if (this.words.length > 0 && this.life.lives > 0) {
-      if (!this.words[0].move()) {
+      if (this.words[0].isDone()) {
         const px = this.words[0].x + this.words[0].width / 2;
         if (this.words[0].state === WordState.INCORRECT) {
           this.life.decrement();
-          this.initParticles(px, this.words[0].y);
+          this.initBubbles(px, this.words[0].y);
         }
         if (this.words[0].state === WordState.CORRECT) {
           this.initConfetti(this.words[0].y);
@@ -450,7 +434,7 @@ export class Game {
       this.initWords();
     }
 
-    this.drawExplosion();
+    this.drawBubbles();
     this.drawConfetti(time);
     if (
       (this.life.lives <= 0 ||
@@ -478,9 +462,9 @@ export class Game {
 
   start() {
     const btnStartGame = this.getButton("BTN_START_GAME");
-    const btnPlayPause = this.getButton("BTN_PLAY_PAUSE");
     btnStartGame.hide();
     // TODO: testing remove
+    // const btnPlayPause = this.getButton("BTN_PLAY_PAUSE");
     // btnPlayPause.playing = true;
     // btnPlayPause.text = "🎵 ⏸️";
     // this.mute(false);

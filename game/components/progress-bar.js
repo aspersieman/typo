@@ -1,3 +1,8 @@
+export const ProgressBarState = {
+  VISIBLE: "VISIBLE",
+  HIDDEN: "HIDDEN",
+};
+
 export class ProgressBarComponent {
   constructor(game, x, y, w, h) {
     this.game = game;
@@ -12,24 +17,27 @@ export class ProgressBarComponent {
     this.luminance = 40;
     this.width = w;
     this.height = h;
+    this.state = ProgressBarState.VISIBLE;
   }
   draw() {
-    this.ctx.fillStyle = "rgba(237,231,255,0.1)";
-    this.ctx.fillRect(this.x, this.y, this.width, this.height);
-    this.ctx.fillStyle =
-      "hsla(" +
-      this.hue +
-      ", " +
-      this.saturation +
-      "%," +
-      this.luminance +
-      "%, 1)";
-    this.ctx.fillRect(this.x, this.y, this.progress, this.height);
-    var grad = this.ctx.createLinearGradient(0, 0, 0, 130);
-    grad.addColorStop(0, "transparent");
-    grad.addColorStop(1, "rgba(0,0,0,0.5)");
-    this.ctx.fillStyle = grad;
-    this.ctx.fillRect(this.x, this.y, this.progress, this.height);
+    if (this.state !== ProgressBarState.HIDDEN) {
+      this.ctx.fillStyle = "rgba(237,231,255,0.1)";
+      this.ctx.fillRect(this.x, this.y, this.width, this.height);
+      this.ctx.fillStyle =
+        "hsla(" +
+        this.hue +
+        ", " +
+        this.saturation +
+        "%," +
+        this.luminance +
+        "%, 1)";
+      this.ctx.fillRect(this.x, this.y, this.progress, this.height);
+      var grad = this.ctx.createLinearGradient(0, 0, 0, 130);
+      grad.addColorStop(0, "transparent");
+      grad.addColorStop(1, "rgba(0,0,0,0.5)");
+      this.ctx.fillStyle = grad;
+      this.ctx.fillRect(this.x, this.y, this.progress, this.height);
+    }
   }
   update() {
     if (this.hueChange) {
@@ -53,5 +61,11 @@ export class ProgressBarComponent {
   setSize(width, height) {
     this.width = width;
     this.height = height;
+  }
+  hide() {
+    this.state = ProgressBarState.HIDDEN;
+  }
+  show() {
+    this.state = ProgressBarState.VISIBLE;
   }
 }

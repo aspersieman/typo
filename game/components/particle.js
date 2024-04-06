@@ -1,28 +1,23 @@
 export class ParticleComponent {
-  constructor(canvas, x, y, radius, dx, dy) {
+  constructor(game, x, y) {
+    this.game = game;
+    this.canvas = game.canvas;
+    this.ctx = this.canvas.getContext("2d");
     this.x = x;
     this.y = y;
-    this.radius = radius;
-    this.dx = dx;
-    this.dy = dy;
-    this.alpha = 1;
-    this.canvas = canvas;
-    this.ctx = this.canvas.getContext("2d");
-  }
-  move() {
-    this.draw(this.ctx);
-    this.alpha -= 0.01;
-    this.x += this.dx;
-    this.y += this.dy;
+    this.width = 400;
+    this.height = 200;
+    this.vx = 0.8 + Math.random() * 1;
+    this.v = Math.random() * 5;
+    this.g = 1 + Math.random() * 3;
+    this.down = false;
+    this.hue = 0;
   }
   draw() {
     this.ctx.save();
-    this.ctx.globalAlpha = this.alpha;
-    this.ctx.fillStyle = "red";
-    this.ctx.beginPath();
-    this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    this.ctx.closePath();
-    this.ctx.fill();
+    this.ctx.fillStyle = "hsla(" + (this.hue + 0.3) + ", 100%, 40%, 1)";
+    let size = Math.random() * 2;
+    this.ctx.fillRect(this.x, this.y, size, size);
     this.ctx.restore();
   }
   setPosition(x, y) {

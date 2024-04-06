@@ -1,6 +1,7 @@
 import { Game } from "game";
 
-const APP_ENV = "production";
+// TODO: Set to production
+const APP_ENV = "dev";
 
 window.onload = () => {
   const game = new Game(APP_ENV);

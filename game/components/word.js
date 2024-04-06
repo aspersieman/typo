@@ -1,5 +1,6 @@
 import { Point } from "utils.geometry";
 import { Difficulty } from "game";
+import { ProgressBarComponent } from "../components/progress-bar.js";
 
 export const WordState = {
   VISIBLE: "VISIBLE",
@@ -9,30 +10,39 @@ export const WordState = {
 };
 
 export class WordComponent {
-  constructor(canvas, text, fillColor, textColor) {
+  constructor(game, text, x, y, w, h, fillColor, textColor) {
     if (fillColor === undefined) {
       fillColor = "#ffffff";
     }
     if (textColor === undefined) {
       textColor = "#000000";
     }
-    this.x = 10;
-    this.y = 0;
+    this.game = game;
+    this.canvas = game.canvas;
+    this.ctx = this.canvas.getContext("2d");
+    this.x = x;
+    this.y = y;
     this.dx = 0;
     this.dy = 0;
-    this.width = 0;
+    this.width = w;
     this.minWidth = 0;
-    this.height = 0;
+    this.height = h;
     this.minHeight = 0;
     this.text = text;
     this.fillColor = fillColor;
     this.textColor = textColor;
     this.state = WordState.VISIBLE;
-    this.canvas = canvas;
-    this.ctx = this.canvas.getContext("2d");
     this.target = null;
     this.speedDefault = 200;
     this.speed = this.speedDefault;
+    this.countdown = 300;
+    this.progressBar = new ProgressBarComponent(
+      this.game,
+      this.x,
+      this.y,
+      this.width,
+      this.height * 0.1,
+    );
   }
   draw() {
     if (this.state !== WordState.HIDDEN) {
@@ -54,24 +64,34 @@ export class WordComponent {
         const dh = ((this.height - this.minHeight) / this.speed) * -1;
         this.width += dw;
         this.height += dh;
+        this.move();
       }
       this.ctx.closePath();
       this.ctx.restore();
+      if (this.progressBar.isDone()) {
+        if (this.state !== WordState.CORRECT) {
+          this.state = WordState.INCORRECT;
+          this.progressBar.reset();
+          this.progressBar.hide();
+        }
+      } else {
+        const now = new Date().getTime();
+        this.tick(now);
+        this.progressBar.draw();
+      }
     }
   }
   move() {
     const shouldMove =
-      Math.abs(this.x - this.target.x) > 1 ||
+      (this.target !== null && Math.abs(this.x - this.target.x) > 1) ||
       Math.abs(this.y - this.target.y) > 1;
     if (!shouldMove) {
       this.dx = 0;
       this.dy = 0;
-      if (this.state !== WordState.CORRECT) {
-        this.state = WordState.INCORRECT;
-      }
       return false;
     }
     this.setPosition(this.x + this.dx, this.y + this.dy);
+    this.progressBar.setPosition(this.x + this.dx, this.y + this.dy);
     return true;
   }
   setPosition(x, y) {
@@ -97,23 +117,39 @@ export class WordComponent {
   }
   setSpeed(speed = 200) {
     this.speed = speed < 10 ? 10 : speed;
-    this.dx = ((this.x - this.target.x) / this.speed) * -1;
-    this.dy = ((this.y - this.target.y) / this.speed) * -1;
+    if (this.target) {
+      this.dx = ((this.x - this.target.x) / this.speed) * -1;
+      this.dy = ((this.y - this.target.y) / this.speed) * -1;
+    }
   }
   setDifficulty(difficulty = Difficulty.NORMAL) {
     switch (difficulty) {
       case Difficulty.EASY:
-        this.setSpeed(this.speedDefault * 2);
+        this.countdown = 10;
         break;
       case Difficulty.NORMAL:
-        this.setSpeed(this.speedDefault);
+        this.countdown = 6;
         break;
       case Difficulty.HARD:
-        this.setSpeed(Math.round(this.speedDefault * 0.75));
+        this.countdown = 4;
         break;
       case Difficulty.EXPERT:
-        this.setSpeed(Math.round(this.speedDefault * 0.5));
+        this.countdown = 4;
         break;
+    }
+  }
+  isDone() {
+    return this.progressBar.progress >= this.width;
+  }
+  tick(ts) {
+    if (!this.timer) {
+      this.timer = ts;
+      return;
+    }
+    if (ts - this.timer > 1000) {
+      this.timer = ts;
+      this.progressBar.update();
+      this.countdown--;
     }
   }
   inBounds(mouseX, mouseY) {
